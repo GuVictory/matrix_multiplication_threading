@@ -93,3 +93,16 @@ Matrix operator*(const Matrix &mtx1, const Matrix &mtx2) {
     }
 }
 
+unsigned int Matrix::getSize() const {
+    return this->matrix.size();
+}
+
+std::vector<int> &Matrix::operator[](const int index) {
+    return this->matrix[index];
+}
+
+const std::vector<int> &Matrix::operator[](const int index) const {
+    return this->matrix[index];
+}
+
+

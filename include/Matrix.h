@@ -18,6 +18,10 @@ public:
     Matrix(const Matrix& mtx);
     ~Matrix();
 
+    unsigned int getSize() const;
+
+    std::vector<int>& operator[] (int index);
+    const std::vector<int>& operator[] (int index) const;
 
     friend Matrix operator*(const Matrix &mtx1, const Matrix &mtx2);
     friend std::ostream& operator<< (std::ostream &out, const Matrix &mtx);
