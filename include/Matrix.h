@@ -19,7 +19,7 @@ public:
     ~Matrix();
 
 
-
+    friend Matrix operator*(const Matrix &mtx1, const Matrix &mtx2);
     friend std::ostream& operator<< (std::ostream &out, const Matrix &mtx);
 };
 

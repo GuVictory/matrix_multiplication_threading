@@ -10,7 +10,7 @@ Matrix::Matrix() {}
 
 Matrix::Matrix(int size) {
     this->matrix = std::vector<std::vector<int>>(size);
-    for (auto row : this->matrix) {
+    for (auto& row : this->matrix) {
         row = std::vector<int>(size);
     }
 }
@@ -62,5 +62,34 @@ std::ostream &operator<<(std::ostream &out, const Matrix &mtx) {
 
 Matrix::Matrix(const Matrix &mtx) {
     this->matrix = mtx.matrix;
+}
+
+Matrix operator*(const Matrix &mtx1, const Matrix &mtx2) {
+    try {
+        if (mtx1.matrix.size() != mtx2.matrix.size()) {
+            throw -1;
+        }
+
+        const int matrixSize = mtx1.matrix.size();
+        auto* resultMatrix = new Matrix(matrixSize);
+
+        for (int i = 0; i < matrixSize; ++i) {
+            for (int j = 0; j < matrixSize; ++j) {
+                int result = 0;
+                for (int k = 0; k < matrixSize; ++k) {
+                    const int e1 = mtx1.matrix[i][k];
+                    const int e2 = mtx2.matrix[k][j];
+                    result += e1 * e2;
+                }
+                resultMatrix->matrix[i][j] = result;
+            }
+        }
+        return *resultMatrix;
+
+    } catch (int err) {
+        std::cerr << "Размеры матриц не совпадают!" << std::endl;
+    } catch (...) {
+        std::cerr << "Общая ошибка" << std::endl;
+    }
 }
 
