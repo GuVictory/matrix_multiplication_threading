@@ -1,50 +1,37 @@
 #include <iostream>
 #include <Matrix.h>
-#include <ThreadsWorker.h>
+#include <ThreadWorker.h>
 #include <ctime>
+#include <fstream>
+
 
 int main() {
-    std::clock_t start;
-    double durationSingle, durationMult;
-    int numberOfThreads = 1;
-
+    int numberOfThreads = 0;
     std::string filename;
-    std::cout << "Enter filename to read mtx1: ";
+
+    std::cout << "Введите количество потоков: ";
+    std::cin >> numberOfThreads;
+
+    // Инициализируем сущность класса ThreadWorker с определенным количеством потоков
+    ThreadWorker::GetInstance(numberOfThreads);
+
+    std::cout << "Введите имя файла для чтения 1й матрицы: ";
     std::cin >> filename;
     auto* mtx1 = new Matrix(filename);
 
-    std::cout << "Enter filename to read mtx2: ";
+    std::cout << "Введите имя файла для чтения 2й матрицы: ";
     std::cin >> filename;
     auto* mtx2 = new Matrix(filename);
 
-    std::cout << "Matrix 1: " << std::endl;
-    std::cout << *mtx1 << std::endl;
 
-    std::cout << "Matrix 2: " << std::endl;
-    std::cout << *mtx2 << std::endl;
 
-    std::cout << "Enter numberOfThreads: ";
-    std::cin >> numberOfThreads;
+    // Произведем простое перемножение матриц
+    auto resultMtx = *mtx1 * *mtx2;
 
-    start = std::clock();
-    auto resMtx1 = *mtx1 * *mtx2;
-    durationSingle = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    // Результаты умножения запишем в файл
+    std::ofstream out("data/result.txt");
+    out << resultMtx << std::endl;
 
-    auto* thWorker = new ThreadsWorker();
-    auto* resultMtx = new Matrix(mtx1->getSize());
-
-    start = std::clock();
-    thWorker->multithreading_execution(numberOfThreads, *resultMtx, *mtx1, *mtx2);
-    durationMult = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-
-    std::cout << "Matrix1 * Matrix2: " << std::endl;
-    std::cout << resMtx1 << std::endl;
-
-    std::cout << "resultMtx: " << std::endl;
-    std::cout << *resultMtx << std::endl;
-
-    std::cout<<"durationSingle: "<< durationSingle <<'\n';
-    std::cout<<"durationMult: "<< durationMult <<'\n';
 
     return 0;
 }

@@ -5,6 +5,7 @@
 #include "Matrix.h"
 #include <string>
 #include <fstream>
+#include <ThreadWorker.h>
 
 Matrix::Matrix() {}
 
@@ -16,6 +17,7 @@ Matrix::Matrix(int size) {
 }
 
 Matrix::Matrix(const std::string& filename) {
+
     std::ifstream in(filename);
 
     std::string delim = " ";
@@ -64,26 +66,31 @@ Matrix::Matrix(const Matrix &mtx) {
     this->matrix = mtx.matrix;
 }
 
+// Возвращает размерность матрицы
+int Matrix::getSize() const {
+    return this->matrix.size();
+}
+
+// Перегрузка [] для изменения элементов матрицы
+std::vector<int> &Matrix::operator[](const int index) {
+    return this->matrix[index];
+}
+
+// Перегрузка [] для обращения к элементам матрицы
+const std::vector<int> &Matrix::operator[](const int index) const {
+    return this->matrix[index];
+}
+
 Matrix operator*(const Matrix &mtx1, const Matrix &mtx2) {
     try {
-        if (mtx1.matrix.size() != mtx2.matrix.size()) {
+        if (mtx1.getSize() != mtx2.getSize()) {
             throw -1;
         }
 
-        const int matrixSize = mtx1.matrix.size();
+        const int matrixSize = mtx1.getSize();
         auto* resultMatrix = new Matrix(matrixSize);
+        ThreadWorker::multithreadingOperationExecution(Operations::multiplication, *resultMatrix, mtx1, mtx2);
 
-        for (int i = 0; i < matrixSize; ++i) {
-            for (int j = 0; j < matrixSize; ++j) {
-                int result = 0;
-                for (int k = 0; k < matrixSize; ++k) {
-                    const int e1 = mtx1.matrix[i][k];
-                    const int e2 = mtx2.matrix[k][j];
-                    result += e1 * e2;
-                }
-                resultMatrix->matrix[i][j] = result;
-            }
-        }
         return *resultMatrix;
 
     } catch (int err) {
@@ -93,16 +100,57 @@ Matrix operator*(const Matrix &mtx1, const Matrix &mtx2) {
     }
 }
 
-unsigned int Matrix::getSize() const {
-    return this->matrix.size();
+void Matrix::multiplyThreading(int numberOfThreads, int currentThreadNumber, Matrix &result, const Matrix &m1,
+                               const Matrix &m2) {
+
+    const int matrixSize = m1.getSize();
+
+    // Количество элементов в матрице
+    const int numberOfElements = (matrixSize * matrixSize);
+
+    // Количество операций, которое должен произвести каждый поток
+    const int numberOfOperations = numberOfElements / numberOfThreads;
+
+    // Остаточное количесвто операций, которые кто-то должен произвести
+    const int restOperations = numberOfElements % numberOfThreads;
+
+    int start_op = 0,  // Включая
+    end_op = 0;    // Не включая
+
+
+    /* Распределение по потокам на примере матрицы 4x4
+     * Thread 0:
+     *      start_op = 5 * 0 = 0
+     *      end_op = 5 * (0 + 1) + 1 = 6;
+     * Thread 1:
+     *      start_op = 5 * 1 + 1 = 6
+     *      end_op = 5 * (1 + 1) + 1 = 11;
+     * Thread 2:
+     *      start_op = 5 * 2 + 1 = 11
+     *      end_op = 5 * (2 + 1) + 1 = 16;
+     * */
+
+    if (currentThreadNumber == 0) {
+        // Первый поток берет на себя большую часть работы
+        start_op = numberOfOperations * currentThreadNumber;
+        end_op = (numberOfOperations * (currentThreadNumber + 1)) + restOperations;
+    }
+    else {
+        start_op = numberOfOperations * currentThreadNumber + restOperations;
+        end_op = (numberOfOperations * (currentThreadNumber + 1)) + restOperations;
+    }
+
+    for (int op = start_op; op < end_op; ++op) {
+        // Переводим индекс 1й размерности в 2ю
+        const int row = op % matrixSize;
+        const int col = op / matrixSize;
+        int r = 0;
+        for (int i = 0; i < matrixSize; ++i) {
+            const int e1 = m1[row][i];
+            const int e2 = m2[i][col];
+            r += e1 * e2;
+        }
+        result[row][col] = r;
+    }
+
 }
-
-std::vector<int> &Matrix::operator[](const int index) {
-    return this->matrix[index];
-}
-
-const std::vector<int> &Matrix::operator[](const int index) const {
-    return this->matrix[index];
-}
-
-
